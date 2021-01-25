@@ -4,6 +4,7 @@
 
 * https://infotraining.bitbucket.io/cpp-adv
 * https://gitpitch.com/infotraining-dev/cpp-adv/develop?grs=bitbucket&p=slides_pl#/
+* https://infotraining.bitbucket.io/cpp-stl/iteratory.html
 
 ## Zdalna maszyna wirtualna (SSH)
 
