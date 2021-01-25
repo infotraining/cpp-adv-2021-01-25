@@ -1,6 +1,7 @@
 #include <algorithm>
-#include <numeric>
 #include <iostream>
+#include <memory>
+#include <numeric>
 #include <string>
 #include <vector>
 
@@ -8,12 +9,12 @@
 
 using namespace std;
 
-int add(int a, int b) 
+int add(int a, int b)
 {
     return a + b;
 }
 
-using PtrFun2Arg = int(*)(int, int);
+using PtrFun2Arg = int (*)(int, int);
 //typedef int (*PtrFun2Arg)(int, int);
 
 int scale_by_2(int x)
@@ -25,7 +26,7 @@ int scale_by_2(int x)
     return x * 2;
 }
 
-using PtrFun1Arg = int(*)(int);
+using PtrFun1Arg = int (*)(int);
 
 namespace v1
 {
@@ -33,7 +34,7 @@ namespace v1
     {
         auto result = data; // copy of vector
 
-        for(auto& item : result)
+        for (auto& item : result)
             item = ptr_f(item); // function call using ptr_f
 
         return result;
@@ -44,6 +45,7 @@ class Logger
 {
     Logger() { std::cout << "Logger()" << std::endl; }
     ~Logger() { std::cout << "~Logger()" << std::endl; }
+
 public:
     Logger(const Logger&) = delete;
     Logger& operator=(const Logger&) = delete;
@@ -81,7 +83,7 @@ TEST_CASE("functions & function pointers")
     std::vector vec = {1, 2, 3};
 
     auto result_vec = v1::calculate(vec, &scale_by_2);
-    REQUIRE(result_vec == std::vector{2, 4, 6});
+    REQUIRE(result_vec == std::vector {2, 4, 6});
 }
 
 /////////////////////////////////////////////
@@ -91,9 +93,12 @@ class ScaleBy
 {
     int counter_ = 0;
     int factor_;
+
 public:
-    ScaleBy(int factor) : factor_{factor}
-    {}
+    ScaleBy(int factor)
+        : factor_ {factor}
+    {
+    }
 
     int operator()(int a)
     {
@@ -110,6 +115,7 @@ public:
 class Printer
 {
     int counter_ = 0;
+
 public:
     void operator()(int a)
     {
@@ -117,12 +123,12 @@ public:
         std::cout << "Item: " << a << "\n";
     }
 
-    void operator()(const std::string& text) 
+    void operator()(const std::string& text)
     {
         ++counter_;
         std::cout << "String: " << text << "\n";
     }
-    
+
     int counter() const
     {
         return counter_;
@@ -138,7 +144,7 @@ namespace v2
 
         auto result = data; // copy of vector
 
-        for(auto& item : result)
+        for (auto& item : result)
             item = f(item); // function call using ptr_f
 
         return result;
@@ -147,23 +153,23 @@ namespace v2
 
 TEST_CASE("functors")
 {
-    ScaleBy scaler_by_2{2};
+    ScaleBy scaler_by_2 {2};
     REQUIRE(scale_by_2(3) == 6);
 
     std::vector vec = {1, 2, 3};
 
     auto result_vec = v2::calculate(vec, scaler_by_2);
-    REQUIRE(result_vec == std::vector{2, 4, 6});
+    REQUIRE(result_vec == std::vector {2, 4, 6});
 
-    result_vec = v2::calculate(vec, ScaleBy{3});
-    REQUIRE(result_vec == std::vector{3, 6, 9});
+    result_vec = v2::calculate(vec, ScaleBy {3});
+    REQUIRE(result_vec == std::vector {3, 6, 9});
 
     result_vec = v2::calculate(vec, &scale_by_2);
-    REQUIRE(result_vec == std::vector{2, 4, 6});
+    REQUIRE(result_vec == std::vector {2, 4, 6});
 
     SECTION("std::for_each & functors")
     {
-        Printer used_printer = std::for_each(std::begin(vec), std::end(vec), Printer{});
+        Printer used_printer = std::for_each(std::begin(vec), std::end(vec), Printer {});
         std::cout << "Printer used " << used_printer.counter() << " times\n";
     }
 }
@@ -173,7 +179,7 @@ namespace explain
     template <typename Iter, typename UnPred>
     Iter find_if(Iter first, Iter last, UnPred pred)
     {
-        for(Iter it = first; it != last; ++it)
+        for (Iter it = first; it != last; ++it)
         {
             if (pred(*it))
                 return it;
@@ -186,8 +192,11 @@ namespace explain
 class GreaterThan
 {
     double avg;
+
 public:
-    GreaterThan(double a) : avg{a} {
+    GreaterThan(double a)
+        : avg {a}
+    {
     }
 
     bool operator()(double value) const
@@ -203,11 +212,11 @@ TEST_CASE("exercise")
     double avg = std::accumulate(vec.begin(), vec.end(), 0.0) / vec.size();
     std::cout << "avg: " << avg << "\n";
 
-    GreaterThan gt_than_avg{avg};
+    GreaterThan gt_than_avg {avg};
     REQUIRE(gt_than_avg(11));
     REQUIRE(gt_than_avg(1) == false);
 
-    auto pos_gt_than_avg = std::find_if(vec.begin(), vec.end(), GreaterThan{avg});
+    auto pos_gt_than_avg = std::find_if(vec.begin(), vec.end(), GreaterThan {avg});
     std::cout << "Found: " << *pos_gt_than_avg << "\n";
 }
 
@@ -219,9 +228,9 @@ TEST_CASE("std functors")
     REQUIRE(gt_int(2, 1));
 
     std::vector vec = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
-    
-    std::sort(vec.begin(), vec.end(), std::greater<int>{});
-    std::for_each(vec.begin(), vec.end(), Printer{});
+
+    std::sort(vec.begin(), vec.end(), std::greater<int> {});
+    std::for_each(vec.begin(), vec.end(), Printer {});
 }
 
 ////////////////////////////////////////////////////////
@@ -231,8 +240,8 @@ class Lambda_342763547623547
 {
 public:
     auto operator()(int a) const
-    { 
-        std::cout << "Print from lambda: " << a << "\n"; 
+    {
+        std::cout << "Print from lambda: " << a << "\n";
     }
 };
 
@@ -243,7 +252,7 @@ namespace c_style
         return 13;
     }
 
-    void callback(void(*call_me)(int))
+    void callback(void (*call_me)(int))
     {
         int temp = get_current_temp();
         call_me(temp);
@@ -252,21 +261,21 @@ namespace c_style
 
 TEST_CASE("the simplest lambda")
 {
-    auto printer = [](int a){ std::cout << "Print from lambda: " << a << "\n"; };
+    auto printer = [](int a) { std::cout << "Print from lambda: " << a << "\n"; };
 
     printer(1);
     printer(2);
 
     SECTION("is interpreted as")
     {
-        auto printer = Lambda_342763547623547{};
+        auto printer = Lambda_342763547623547 {};
     }
 
     std::vector vec = {112, 212, 312};
     vec = v2::calculate(vec, [](int a) { return a * 2; });
     std::for_each(vec.begin(), vec.end(), printer);
 
-    std::vector<int*> vec_ptrs = { new int(12), new int(665), new int(1) };
+    std::vector<int*> vec_ptrs = {new int(12), new int(665), new int(1)};
 
     std::sort(vec_ptrs.begin(), vec_ptrs.end(), [](int* pa, int* pb) { return *pa < *pb; });
 
@@ -280,8 +289,12 @@ TEST_CASE("the simplest lambda")
 class Lambda_87364273548276345
 {
     const double avg_;
+
 public:
-    Lambda_87364273548276345(double avg) : avg_{avg} {}
+    Lambda_87364273548276345(double avg)
+        : avg_ {avg}
+    {
+    }
     auto operator()(int x) const { return x > avg_; }
 };
 
@@ -349,8 +362,10 @@ class Data
 {
     const std::vector<int> data_;
     double avg_;
+
 public:
-    Data(std::vector<int> data) : data_{std::move(data)}
+    Data(std::vector<int> data)
+        : data_ {std::move(data)}
     {
         avg_ = std::accumulate(data_.begin(), data_.end(), 0.0) / data_.size();
     }
@@ -364,6 +379,109 @@ public:
 
 TEST_CASE("capturing this")
 {
-    Data data{{1, 2, 3, 5, 6, 7, 8, 9, 10}};
+    Data data {{1, 2, 3, 5, 6, 7, 8, 9, 10}};
     data.print_gt_than_avg();
+}
+
+TEST_CASE("lambda expressions with ->")
+{
+    auto describe = [](int n) -> std::string { // -> only for C++11 compilers
+        if (n % 2 == 2)
+            return "even";
+        else
+            return "odd";
+    };
+}
+
+class GenericPrinter
+{
+    int counter_ = 0;
+
+public:
+    template <typename T>
+    void operator()(const T& item)
+    {
+        ++counter_;
+        std::cout << "Item: " << item << "\n";
+    }
+
+    int counter() const
+    {
+        return counter_;
+    }
+};
+
+class Lambda_928364782356235
+{
+public:
+    template <typename T>
+    void operator()(const T& item) const
+    {
+        std::cout << "Item: " << item << "\n";
+    }
+};
+
+TEST_CASE("generic lambda expressions - C++14")
+{
+    auto printer = [](const auto& item) {
+        std::cout << "Item: " << item << "\n";
+    };
+
+    std::vector numbers = {1, 2, 3};
+    std::for_each(numbers.begin(), numbers.end(), printer);
+
+    std::vector words = {"one"s, "two"s, "three"s};
+    std::for_each(words.begin(), words.end(), printer);
+}
+
+class Gadget
+{
+    std::string name_;
+
+public:
+    Gadget(std::string name)
+        : name_ {std::move(name)}
+    {
+        std::cout << "Gadget(" << name_ << ")\n";
+    }
+
+    ~Gadget()
+    {
+        std::cout << "~Gadget(" << name_ << ")\n";
+    }
+
+    void use() const
+    {
+        std::cout << "using Gadget(" << name_ << ")\n";
+    }
+};
+
+TEST_CASE("init expressions in capture clause")
+{
+    int x = 10;
+
+    auto l1 = [lx = x] { return lx; }; // capture by value makes copy when closure is created
+
+    x = 11;
+
+    REQUIRE(l1() == 10);
+
+    SECTION("lambda + move semantics")
+    {
+        std::unique_ptr<Gadget> ptr_gadget = std::make_unique<Gadget>("ipad");
+        std::unique_ptr<Gadget> other_ptr = std::move(ptr_gadget);
+        REQUIRE(ptr_gadget.get() == nullptr);
+
+        auto use_gadget = [ptr = std::move(other_ptr)] { ptr->use(); };
+        REQUIRE(other_ptr.get() == nullptr);
+    }
+}
+
+TEST_CASE("std algorithms + lambda expressions")
+{
+    std::vector<std::string> words = {"zero", "sixty_six", "one", "two", "three", "four"};
+
+    auto compare_by_length = [](const auto& a, const auto& b) { return a.size() > b.size(); };
+
+    std::sort(words.begin(), words.end(), compare_by_length);
 }
