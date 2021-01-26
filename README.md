@@ -1,5 +1,9 @@
 # Szkolenie - Zaawansowane programowanie w C++ #
 
+## Linki
+
+* https://www.youtube.com/watch?v=2olsGf6JIkU&ab_channel=CppCon
+
 ## Dokumentacja + slajdy
 
 * https://infotraining.bitbucket.io/cpp-adv

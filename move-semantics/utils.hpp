@@ -2,7 +2,7 @@
 #include <string>
 #include <string_view>
 
-#define ENABLE_MOVE_SEMANTICS
+//#define ENABLE_MOVE_SEMANTICS
 
 namespace Utils
 {
@@ -39,6 +39,11 @@ namespace Utils
             , name_ {name}
         {
             std::cout << "Gadget(" << id_ << ", " << name_ << ")" << std::endl;
+        }
+
+        ~Gadget()
+        {
+            std::cout << "~Gadget(" << (name_.empty() ? "after-move" : name_) << ")" << std::endl;
         }
 
         Gadget(const Gadget& source)
