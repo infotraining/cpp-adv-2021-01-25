@@ -2,7 +2,7 @@
 #include <string>
 #include <string_view>
 
-//#define ENABLE_MOVE_SEMANTICS
+#define ENABLE_MOVE_SEMANTICS
 
 namespace Utils
 {

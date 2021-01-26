@@ -18,6 +18,7 @@ void use(Gadget g)
 TEST_CASE("move semantics")
 {
     std::vector<Gadget> gadgets;
+    gadgets.reserve(100);
 
     Gadget g {0, "ipad0"};
     gadgets.push_back(g);
@@ -95,9 +96,11 @@ namespace explain
     template <typename T>
     class unique_ptr
     {
-        T* ptr_;
+        T* ptr_ = nullptr;
 
     public:
+        unique_ptr() = default;
+
         explicit unique_ptr(T* ptr)
             : ptr_ {ptr}
         {
@@ -136,6 +139,12 @@ namespace explain
             return *this;
         }
 
+        ~unique_ptr()
+        {
+            if (ptr_)
+                delete ptr_;
+        }
+
         T& operator*() const
         {
             return *ptr_;
@@ -145,17 +154,13 @@ namespace explain
         {
             return ptr_;
         }
-
-        ~unique_ptr()
-        {
-            if (ptr_)
-                delete ptr_;
-        }
     };
 }
 
 TEST_CASE("unique_ptr & move semantics")
 {
+    explain::unique_ptr<Gadget> up0;
+
     explain::unique_ptr<Gadget> up1 {new Gadget(1, "ipad")};
 
     REQUIRE((*up1).id() == 1);
@@ -175,3 +180,78 @@ TEST_CASE("unique_ptr & move semantics")
     }
 
 } // destructor Gadget
+
+struct Member
+{
+    std::string value;
+
+    Member() = default;
+};
+
+struct Person
+{
+    int id;
+    std::string name;
+    Member member;
+
+    Person() = default;
+
+    Person(int id, std::string n) : id{id}, name{std::move(n)}
+    {}
+};
+
+TEST_CASE("special functions")
+{
+    Person p(1, "Adam");
+
+    Person p1 = p;
+    REQUIRE(p1.id == 1);
+    REQUIRE(p1.name == "Adam"s);
+    REQUIRE(p.id == 1);
+    REQUIRE(p.name == "Adam"s);
+
+    Person p2 = std::move(p); // p is expiring value - x-value
+    REQUIRE(p2.id == 1);
+    REQUIRE(p2.name == "Adam"s);
+    REQUIRE(p.id == 1);
+    REQUIRE(p.name == ""s);
+}
+
+struct Data
+{
+    std::vector<int> data;
+
+    Data(std::initializer_list<int> il) : data(il)
+    {}
+
+    Data(const Data&) = default;
+    Data& operator=(const Data&) = default;
+    Data(Data&&) = default;
+    Data& operator=(Data&&) = default;
+
+    ~Data() { data.clear(); }
+};  
+
+TEST_CASE("data")
+{
+    Data d1 = {1, 2, 3};
+
+    Data backup = d1; // copy
+    Data target = std::move(d1); // move
+
+    REQUIRE(d1.data.size() == 0);
+}
+
+struct Modern
+{
+    std::vector<int> vec;
+    std::string name;
+    explain::unique_ptr<Gadget> gadget;
+};
+
+TEST_CASE("modern C++ classes")
+{
+    Modern m1{std::vector{1, 2, 3}, "text"s, explain::unique_ptr<Gadget>(new Gadget(1, "ipad"))};
+
+    Modern m2 = std::move(m1);
+}
