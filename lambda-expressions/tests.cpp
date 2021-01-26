@@ -1,9 +1,13 @@
 #include <algorithm>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <numeric>
 #include <string>
 #include <vector>
+#include <queue>
+#include <thread>
+#include <future>
 
 #include "catch.hpp"
 
@@ -148,6 +152,21 @@ namespace v2
             item = f(item); // function call using ptr_f
 
         return result;
+    }
+
+    namespace bad_idea
+    {
+        auto calculate(const std::vector<int>& data, std::function<int(int)> f) // Fun2Arg is passed by value -> is copied
+        {
+            puts(__PRETTY_FUNCTION__);
+
+            auto result = data; // copy of vector
+
+            for (auto& item : result)
+                item = f(item); // function call using ptr_f
+
+            return result;
+        }
     }
 }
 
@@ -484,4 +503,126 @@ TEST_CASE("std algorithms + lambda expressions")
     auto compare_by_length = [](const auto& a, const auto& b) { return a.size() > b.size(); };
 
     std::sort(words.begin(), words.end(), compare_by_length);
+}
+
+TEST_CASE("storing callable objects")
+{
+    int (*ptr_fun)(int) = &scale_by_2;
+
+    ScaleBy scaler_by_3 {3};
+
+    int factor = 6;
+    auto scaler_by_factor = [factor](int x) { return x * factor; };
+
+    auto identity = [](int x) { return x; };
+
+    SECTION("empty std::function when called throws an exception")
+    {
+        std::function<int(int)> scaler;
+        REQUIRE_THROWS_AS(scaler(6), std::bad_function_call);
+    }
+
+    SECTION("std::function can store any callable with given signature")
+    {
+        std::function<int(int)> scaler;
+
+        scaler = scale_by_2;
+        REQUIRE(scaler(2) == 4);
+
+        scaler = ScaleBy {4};
+        REQUIRE(scaler(4) == 16);
+
+        scaler = [](int x) { return x * 5; };
+        REQUIRE(scaler(3) == 15);
+    }
+}
+
+class TaskQueue
+{
+    using Task = std::function<void()>;
+    std::queue<Task> q_;
+public:
+    void submit(Task t)
+    {
+        q_.push(std::move(t));
+    }
+
+    void run()
+    {
+        while(!q_.empty())
+        {
+            Task task_to_run = q_.front();
+            q_.pop();
+
+            task_to_run();
+        }
+    }
+};
+
+void save_to_file(const std::string& file_name)
+{
+    std::cout << "Saving to file: " << file_name << std::endl;
+    std::this_thread::sleep_for(2s);
+    std::cout << "File " << file_name << " is saved..." << std::endl;
+}
+
+std::string load_from_file(const std::string& file_name)
+{
+    std::cout << "Loading from file: " << file_name << std::endl;
+    std::this_thread::sleep_for(2s);
+    std::cout << "File " << file_name << " is loaded..." << std::endl;
+
+    return "Content of file";
+}
+
+class Fax
+{
+public:
+    void start()
+    {
+        puts("start");
+    }
+
+    void stop()
+    {
+        puts("stop");
+    }
+
+    void print(const std::string& content)
+    {
+        puts(content.c_str());
+    }
+};
+
+TEST_CASE("using TaskQueue")
+{
+    TaskQueue q;
+
+    Fax fax;
+
+    q.submit([] { save_to_file("data.txt"); });
+    q.submit([&fax] { fax.start(); fax.print("Text"); });
+    q.submit([&fax] { fax.stop(); });
+
+    std::cout << "----------------\n";
+
+    q.run();
+}
+
+TEST_CASE("packaged_task")
+{
+    std::cout << "\n==========================\n";
+    std::packaged_task<std::string()> task_load([] { return load_from_file("data2.txt"); });
+    std::future<std::string> f_content1 = task_load.get_future();
+    std::thread thd1{std::move(task_load)}; // starting task in a new thread
+    thd1.detach();
+
+    std::future<std::string> f_content2 = std::async(std::launch::async, []{ return load_from_file("file3.data");});
+
+    std::packaged_task<void()> task_save([] { save_to_file("another.dat");});
+    std::thread thd2{std::move(task_save)}; // starting task in a new thread
+    thd2.detach();
+    
+    std::string content = f_content1.get() + f_content2.get();
+    std::cout << "Contents of file: " << content << std::endl;
 }

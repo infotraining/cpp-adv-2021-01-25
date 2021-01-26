@@ -5,11 +5,6 @@ cmake_minimum_required(VERSION 2.8)
 project(${PROJECT_NAME_STR})
 
 #----------------------------------------
-# set Threads
-#----------------------------------------
-find_package(Threads REQUIRED)
-
-#----------------------------------------
 # Application
 #----------------------------------------
 aux_source_directory(. SRC_LIST)
@@ -18,7 +13,6 @@ aux_source_directory(. SRC_LIST)
 file(GLOB HEADERS_LIST "*.h" "*.hpp")
 add_executable(${PROJECT_NAME} ${SRC_LIST} ${HEADERS_LIST})
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
-target_link_libraries(${PROJECT_NAME} Threads::Threads) 
 
 #----------------------------------------
 # Tests
