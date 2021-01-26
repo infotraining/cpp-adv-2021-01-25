@@ -24,6 +24,7 @@ TEST_CASE("move semantics")
     gadgets.push_back(g);
     gadgets.push_back(Gadget {1, "ipad1"});
     gadgets.push_back(2);
+    gadgets.push_back(std::move(g));
 
     std::cout << "--------------\n";
 
