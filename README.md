@@ -4,11 +4,25 @@
 
 * https://www.youtube.com/watch?v=2olsGf6JIkU&ab_channel=CppCon
 
+## Libs
+ * Menadżer pakietów: vcpkg
+ * fmt - formatowanie stringów - https://github.com/fmtlib/fmt
+ * folly - Facebook Open Library - https://github.com/facebook/folly
+ * abseil - Google basic library
+ * boost - https://www.boost.org/doc/libs/
+
 ## Dokumentacja + slajdy
 
 * https://infotraining.bitbucket.io/cpp-adv
 * https://gitpitch.com/infotraining-dev/cpp-adv/develop?grs=bitbucket&p=slides_pl#/
 * https://infotraining.bitbucket.io/cpp-stl/iteratory.html
+* https://learning.oreilly.com/library/view/discovering-modern-c/9780134383682/
+
+## Books
+
+* https://learning.oreilly.com/library/view/the-c-standard/9780132978286/
+* https://learning.oreilly.com/library/view/c-concurrency-in/9781617294693/
+* https://learning.oreilly.com/library/view/designing-audio-effect/9780240825151/ - Designing Audio Effect Plug-Ins in C++
 
 ## Zdalna maszyna wirtualna (SSH)
 

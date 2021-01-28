@@ -16,7 +16,7 @@ void have_fun(const Gadget& g) // ver 2
     std::cout << "Having fun with " << g.name() << "\n";
 }
 
-void have_fun(Gadget&& g)
+void have_fun(Gadget&& g) // ver 3
 {
     puts(__PRETTY_FUNCTION__);
     std::cout << "Having fun with " << g.name() << "\n";
@@ -32,9 +32,20 @@ void have_fun(Gadget&& g)
 //     have_fun(g); // calls have_fun(const Gadget&)
 // }
  
-// void use(Gadget&& g)
+// void use(Gadget&& g) /// g jest l-value (bo ma nazwę) typu r-value_reference do Gadget (Gadget&&)
+// {   
+//     //have_fun(g); // g jest l-value przesłanym do have_fun() -> ver 3 odpada, bo l-value g nie może zostać związane z Gadget&& -> dopasowane bedzie wywolanie have_fun(Gadget& g)
+//     // -> have_fun(static_cast<Gadget&&>(g)) -> to zapewni wywołanie have_fun(Gadget&&)
+//     have_fun(std::move(g)); // działa tak samo calls have_fun(Gadget&&)
+// }
+
+// TEST_CASE("simple case")
 // {
-//     have_fun(std::move(g)); // calls have_fun(Gadget&&)
+//     Gadget g{1, "ipad"}; // g jest l-value typu Gadget
+    
+//     use(g);
+
+//     use(Gadget{2, "ipod"}); // argument wywołania nie ma nazwy, więc jest to r-value Gadget // GOTO 35
 // }
 
 template <typename TGadget1, typename TGadget2>
@@ -74,3 +85,14 @@ void foo(T&& item)
 //     auto&& ax2 = 4; // int&&
 // }
 
+
+TEST_CASE("std::move does not move")
+{
+    const std::vector<int> vec = {1, 2, 3};
+
+    std::vector<int> backup = vec; // copy
+    std::vector<int> target = std::move(vec); // still copy 
+
+    REQUIRE(target == std::vector{1, 2, 3});
+    //REQUIRE(vec.empty()); // FAILS
+}
