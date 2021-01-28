@@ -4,6 +4,8 @@
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <memory>
+#include <vector>
 
 class Observer
 {
@@ -12,60 +14,66 @@ public:
     virtual ~Observer() {}
 };
 
-class Subject
+class TempMonitor
 {
-    int state_;
-    std::set<Observer*> observers_;
+    int temp_;
+    std::set<std::weak_ptr<Observer>, std::owner_less<std::weak_ptr<Observer>>> observers_;
 
 public:
-    Subject() : state_(0)
+    TempMonitor() : temp_(0)
     {
     }
 
-    void register_observer(Observer* observer)
+    void register_observer(std::weak_ptr<Observer> observer)
     {
         observers_.insert(observer);
     }
 
-    void unregister_observer(Observer* observer)
+    void unregister_observer(std::weak_ptr<Observer> observer)
     {
         observers_.erase(observer);
     }
 
-    void set_state(int new_state)
+    void set_temp(int new_temp)
     {
-        if (state_ != new_state)
+        if (temp_ != new_temp)
         {
-            state_ = new_state;
-            notify("Changed state on: " + std::to_string(state_));
+            temp_ = new_temp;
+            notify("Temp changed on: " + std::to_string(temp_));
         }
     }
 
 protected:
     void notify(const std::string& event_args)
     {
-        for (Observer* observer : observers_)
+        for (std::weak_ptr<Observer> observer : observers_)
         {
-            observer->update(event_args);
+            if (std::shared_ptr<Observer> living_observer = observer.lock(); living_observer)
+                living_observer->update(event_args);
         }
     }
 };
 
-class ConcreteObserver1 : public Observer
+class Fan : public Observer
 {
 public:
     virtual void update(const std::string& event)
     {
-        std::cout << "ConcreteObserver1: " << event << std::endl;
+        std::cout << "Fan is notified: " << event << "\n";
     }
 };
 
-class ConcreteObserver2 : public Observer
+class Display : public Observer, public std::enable_shared_from_this<Display>
 {
 public:
     virtual void update(const std::string& event)
     {
-        std::cout << "ConcreteObserver2: " << event << std::endl;
+        std::cout << "Update of display: " << event << std::endl;
+    }
+
+    void register_me_as_observer(TempMonitor& tm)
+    {
+        tm.register_observer(shared_from_this());
     }
 };
 
@@ -73,21 +81,24 @@ int main(int argc, char const* argv[])
 {
     using namespace std;
 
-    Subject s;
+    TempMonitor s;
 
-    ConcreteObserver1* o1 = new ConcreteObserver1;
-    s.register_observer(o1);
+    std::shared_ptr<Fan> fan = std::make_shared<Fan>();
+    s.register_observer(fan);
 
     {
-        ConcreteObserver2* o2 = new ConcreteObserver2;
-        s.register_observer(o2);
+        std::shared_ptr<Observer> o = std::make_shared<Display>();
 
-        s.set_state(1);
+        auto dp = std::dynamic_pointer_cast<Display>(o);
 
-        delete o2;
+        dp->register_me_as_observer(s);
+
+        s.set_temp(1);
+
+        dp.reset();
 
         cout << "End of scope." << endl;
     }
 
-    s.set_state(2);
+    s.set_temp(2);
 }
