@@ -81,24 +81,26 @@ int main(int argc, char const* argv[])
 {
     using namespace std;
 
-    TempMonitor s;
+    TempMonitor temp_monitor;
 
     std::shared_ptr<Fan> fan = std::make_shared<Fan>();
-    s.register_observer(fan);
+    temp_monitor.register_observer(fan);
 
     {
         std::shared_ptr<Observer> o = std::make_shared<Display>();
 
         auto dp = std::dynamic_pointer_cast<Display>(o);
 
-        dp->register_me_as_observer(s);
+        dp->register_me_as_observer(temp_monitor);
 
-        s.set_temp(1);
+        temp_monitor.set_temp(1);
 
         dp.reset();
 
         cout << "End of scope." << endl;
     }
 
-    s.set_temp(2);
+    temp_monitor.set_temp(2);
 }
+
+

@@ -94,6 +94,74 @@ namespace explain
         return explain::unique_ptr<T>(new 
         T(std::forward<TArgs>(args)...));
     }
+
+    template <typename T>
+    class unique_ptr<T[]>
+    {
+        T* ptr_ = nullptr;
+
+    public:
+        unique_ptr() = default;
+
+        explicit unique_ptr(T* ptr)
+            : ptr_ {ptr}
+        {
+        }
+
+        unique_ptr(nullptr_t)
+            : ptr_ {nullptr}
+        {
+        }
+
+        unique_ptr(const unique_ptr&) = delete;
+        unique_ptr& operator=(const unique_ptr&) = delete;
+
+        // move constructor
+        unique_ptr(unique_ptr&& other)
+            : ptr_ {other.ptr_}
+        {
+            other.ptr_ = nullptr;
+        }
+
+        unique_ptr& operator=(unique_ptr&& other) // move assignment
+        {
+            if (this != &other) // avoiding self-assignment
+            {
+                delete ptr_;
+
+                ptr_ = other.ptr_;
+                other.ptr_ = nullptr;
+            }
+
+            return *this;
+        }
+
+        ~unique_ptr()
+        {
+            if (ptr_)
+                delete[] ptr_;
+        }
+
+        T& operator*() const
+        {
+            return *ptr_;
+        }
+
+        T* operator->() const
+        {
+            return ptr_;
+        }
+
+        T& operator[](size_t index) const
+        {
+            return ptr_[index];
+        }
+
+        explicit operator bool() const
+        {
+            return ptr_ != nullptr;
+        }
+    };
 }
 
 TEST_CASE("unique_ptr & move semantics")
@@ -178,3 +246,14 @@ TEST_CASE("auto vs. decltype(auto)")
 
     REQUIRE(vec[1] == 42);
 }
+
+TEST_CASE("partial specialization for unique_ptr for arrays")
+{
+    int* dynamic_tab = new int[1024];
+    delete[] dynamic_tab;
+
+    explain::unique_ptr<int[]> tab(new int[1024]);
+
+    tab[1] = 13;
+
+} // delete[] tab.ptr_

@@ -128,3 +128,34 @@ TEST_CASE("shared_ptrs")
 
     std::cout << "--------------\n";
 }
+
+//////////////////////////////////////////////
+// custom deallocators
+
+FILE* open_file(const char* filename)
+{
+    FILE* f = fopen(filename, "w");
+    std::cout << "Opening a file: " << filename << " - " << reinterpret_cast<void*>(f) << "\n";
+    return f;
+}
+
+void close_file(FILE* file)
+{
+    std::cout << "Closing a file: " << reinterpret_cast<void*>(file) << "\n";
+    fclose(file);
+}
+
+TEST_CASE("custom dealloc")
+{
+    {
+        std::unique_ptr<Gadget> g(new Gadget(1, "reverb"));
+
+        //                    typ dealokatora - wsk na funkcje                 adres funkcji dealokujacej
+        std::unique_ptr<FILE, void(*)(FILE*)> safe_file(open_file("test.dat"), &close_file); // 
+
+        auto custom_deallocator = [](FILE* f) { close_file(f); };
+
+        //                    deduction of closure type 
+        std::unique_ptr<FILE, decltype(custom_deallocator)> another_file(open_file("text.dat"), custom_deallocator);
+    }
+}

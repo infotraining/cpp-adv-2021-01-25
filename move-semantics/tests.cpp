@@ -171,3 +171,75 @@ TEST_CASE("data")
 
 //     Modern m2 = std::move(m1);
 // }
+
+class Moveable
+{
+public:
+    std::unique_ptr<int> ptr_;
+    std::vector<int> data_;
+
+    Moveable(std::unique_ptr<int> ptr, std::initializer_list<int> lst) 
+        : ptr_{std::move(ptr)}, data_(lst)
+    {}
+
+    // ~Moveable() = default; // user declared
+    // Moveable(Moveable&&) = default;
+    // Moveable& operator=(Moveable&&) = default;
+    // Moveable(const Moveable&) = delete;
+    // Moveable& operator=(const Moveable&) = delete;
+
+    void zero()
+    {
+        std::fill(data_.begin(), data_.end(), 0);
+    }
+};
+
+TEST_CASE("")
+{
+    Moveable mv1{std::make_unique<int>(13), {1, 2, 3}};
+    Moveable mv2 = std::move(mv1);
+}
+
+///////////////////////////////////////
+// auto & template type deduction
+
+template<typename T>
+void deduce(T arg)
+{}
+
+// void deduce_cpp_20(auto arg)
+// {
+// }
+
+template <typename T>
+void universal_ref_deduction(T&& arg)
+{}
+
+// void universal_ref_deduction_cpp_20(auto&& arg)
+// {}
+
+void pass_r_value(std::string&& value)
+{}
+
+template <typename T>
+void pass_anything(T&& value)
+{}
+
+TEST_CASE("auto & template type deduction")
+{
+    auto x = 10;
+
+    deduce(10);
+
+    auto&& universal_reference1 = x; // int& - ponieważ x jest l-value
+
+    auto&& universal_reference2 = 10; // int&& - ponieważ 10 jest r-value
+
+    std::string name = "Jan";
+
+    //pass_r_value(name); // ERROR - l-value cannot be bound to r-value reference
+    pass_r_value("text"s);
+
+    pass_anything(name);
+    pass_anything("text"s);
+}

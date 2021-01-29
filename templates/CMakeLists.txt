@@ -21,7 +21,6 @@ project(${PROJECT_NAME_STR})
 #----------------------------------------
 # Libs
 #----------------------------------------
-find_package(fmt CONFIG REQUIRED)
 
 #----------------------------------------
 # Application
@@ -32,7 +31,6 @@ aux_source_directory(. SRC_LIST)
 # Headers
 file(GLOB HEADERS_LIST "*.h" "*.hpp")
 add_executable(${PROJECT_NAME} ${SRC_LIST} ${HEADERS_LIST})
-target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt fmt::fmt-header-only)
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 
 #----------------------------------------
