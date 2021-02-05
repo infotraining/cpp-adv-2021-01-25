@@ -155,7 +155,7 @@ TEST_CASE("custom dealloc")
 
         auto custom_deallocator = [](FILE* f) { close_file(f); };
 
-        //                    deduction of closure type 
+        //                    deduction of closure type                                         closure
         std::unique_ptr<FILE, decltype(custom_deallocator)> another_file(open_file("text.dat"), custom_deallocator);
     }
 }

@@ -324,3 +324,45 @@ TEST_CASE("remove_ref & std::move")
 
     std::string target = explain::move(str);
 }
+
+namespace explain
+{
+    template <bool Condition, typename T = void>
+    struct enable_if
+    {
+        using type = T;
+    };
+
+    template <typename T>
+    struct enable_if<false, T>
+    {};
+
+    template <bool Condition, typename T = void>
+    using enable_if_t = typename enable_if<Condition, T>::type;
+}
+
+template <typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
+void calculate(T x)
+{
+    puts(__PRETTY_FUNCTION__);
+    std::cout << "calculate(int: " << x << ")\n";
+}
+
+template <typename T, typename = void, typename = std::enable_if_t<std::is_floating_point_v<T>>>
+void calculate(T x)
+{
+    std::cout << "calculate(double: " << x << ")\n";
+}
+
+TEST_CASE("enable_if")
+{
+    calculate(42);
+
+    short s = 3;
+    calculate(s);
+
+    calculate(3.14);
+
+    float f = 3.14;
+    calculate(f);
+}
